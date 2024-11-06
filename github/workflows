@@ -1,0 +1,47 @@
+name: Python Web App CI
+
+# Trigger the workflow on push or pull request events to the main branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # The environment to run the job (Ubuntu is common)
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'  # You can change this to your desired version of Python
+
+    - name: Cache Python dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip  # Cache the pip cache to speed up future installs
+        key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}  # Cache key based on requirements.txt
+        restore-keys: |
+          ${{ runner.os }}-python-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Install the dependencies from requirements.txt
+
+    - name: Run tests
+      run: |
+        pytest  # Or another test runner like `python -m unittest discover`
+
+    - name: Upload coverage results (optional)
+      if: success()  # Only upload coverage if tests pass
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml  # Specify your coverage report file if you're using coverage tools
+
